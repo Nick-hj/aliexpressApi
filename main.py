@@ -9,7 +9,8 @@
 # 主函数
 
 from routers import create_app
-
+from aliexpress.conf.settings import load_or_create_settings
+load_or_create_settings('')
 app = create_app()
 
 if __name__ == '__main__':

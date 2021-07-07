@@ -8,11 +8,9 @@
 
 # 注册路由
 
-from apps.ae_freight import views as ae_views
 from apps.goodsApi import views as goods_views
 from fastapi import FastAPI
 def create_app():
     app = FastAPI()
-    app.include_router(ae_views.router, prefix="/aliexpress", tags=["aliexpress"])
-    app.include_router(goods_views.router, prefix="/goodsApi", tags=["goodsApi"])
+    app.include_router(goods_views.router, prefix="/api/aliexpress", tags=["aliexpress"])
     return app
