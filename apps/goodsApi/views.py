@@ -11,6 +11,8 @@ from aliexpress import ProductsSpider
 from utils.base import logger
 
 router = APIRouter()
+redis_conn = redis.StrictRedis(host=settings.REDIS.HOST, port=settings.REDIS.PORT, db=settings.REDIS.DB,
+                               password=settings.REDIS.PASSWD)
 
 
 @router.post('/goodsUrl')
@@ -20,11 +22,17 @@ async def save_data(data: dict = Body(...)):
     :param data:
     :return:
     '''
-    logger.info(data)
-    url = data.get('url')
-    product = ProductsSpider(url)
-    data = product.goods_info()
-    return data
+    try:
+        url = data.get('url')
+        product = ProductsSpider(url)
+        data = product.goods_info()
+        logger.info(f'采集AE数据成功========{data}')
+        return data
+    except Exception as e:
+        return {
+            'code': False,
+            'msg': e
+        }
 
 
 @router.post('/batchImportAeUrl')
@@ -34,12 +42,16 @@ async def save_data(data: dict = Body(...)):
     :param data:
     :return:
     '''
-    redis_conn = redis.StrictRedis(host=settings.REDIS.HOST, port=settings.REDIS.PORT, db=settings.REDIS.DB,
-                                   password=settings.REDIS.PASSWD)
-    url_list = data.get('urlList', None)
-    for url in url_list:
-        redis_conn.lpush(settings.ALIEXPRESS_URL, url)
-    return {
-        'code': True,
-        'msg': '成功'
-    }
+    try:
+        url_list = data.get('urlList', None)
+        for url in url_list:
+            redis_conn.rpush(settings.ALIEXPRESS_URL, url)
+        return {
+            'code': True,
+            'msg': '成功'
+        }
+    except Exception as e:
+        return {
+            'code': False,
+            'msg': e
+        }

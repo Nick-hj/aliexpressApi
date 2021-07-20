@@ -87,3 +87,15 @@ def headers(path):
         'cookie': settings.AE_COOKIE
     }
     return headers
+
+
+def request_form_post(url, data, headers=None, proxy=None):
+    try:
+        with closing(requests.post(url=url, data=data, headers=headers, proxies=proxy)) as response:
+            return response.text
+    except requests.exceptions.ProxyError as e:
+        with closing(requests.post(url=url, data=data, headers=headers)) as response:
+            return response.text
+    except Exception as e:
+        logger.error(f'请求失败====={e}')
+        return 404, ''

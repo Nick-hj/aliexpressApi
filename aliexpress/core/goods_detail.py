@@ -7,6 +7,7 @@ import re
 import http.client
 import redis
 
+from aliexpress.core.reviews import Reviews
 from aliexpress.lib.base_fun import logger, proxy, request_get, headers
 from dynaconf import settings
 
@@ -92,14 +93,30 @@ class ProductsSpider(object):
                     item['weight'] = None
                     item['years'] = self.opened_year(data)
                     item['shippingFrom'] = self.shipping_from(data)
+                    item['keywords'] = self.keywords(data)
+                    item['ownerMemberId'] = self.seller_admin_seq(data)
                     self.goods_data['code'] = True
                     self.goods_data['item'] = item
                     logger.info(f'成功： {self.url}')
+                    # 评论
+                    ae_reviews_id = {
+                        'product_id': ali_id,
+                        'owner_member_id': item['ownerMemberId']
+                    }
+                    self.redis_conn.lpush('ae_reviews_id', json.dumps(ae_reviews_id))
                 else:
                     logger.error(f'失败url:   self.url')
             except Exception as e:
                 logger.error(f'失败url:   self.url')
         return self.goods_data
+
+    @staticmethod
+    def seller_admin_seq(data):
+        return data['storeModule']['sellerAdminSeq']
+
+    @staticmethod
+    def keywords(data):
+        return data['pageModule']['keywords']
 
     @logger.catch()
     def parse_desc(self, desc_url):
@@ -168,6 +185,15 @@ class ProductsSpider(object):
         :return:
         '''
         image = data['imageModule']['imagePathList']
+        if image:
+            image_list = []
+            for i in image:
+                pattern = re.compile(r'.*(\.jpg|\.jpeg|\.png)')
+                img_format = pattern.match(i)
+                if img_format:
+                    _image = i + "_Q90" + img_format.group(1) + "_.webp"
+                    image_list.append(_image)
+            image = image_list
         return image
 
     @staticmethod
@@ -279,10 +305,19 @@ class ProductsSpider(object):
                 sku = {}
                 # 属性值id集合
                 sku['channel'] = 0
-                try:
-                    sku['costPrice'] = sku_price['skuVal']['skuActivityAmount']['value']
-                except Exception as e:
-                    sku['costPrice'] = sku_price['skuVal']['skuAmount']['value']
+                # 是否新用户
+                is_new_user = data['priceModule'].get('activityMessage', None)
+                if is_new_user:
+                    try:
+                        cost_price = sku_price['skuVal']['skuAmount']['value']
+                    except KeyError as e:
+                        cost_price = sku_price['skuVal']['skuMultiCurrencyCalPrice']
+                else:
+                    try:
+                        cost_price = sku_price['skuVal']['skuActivityAmount']['value']
+                    except KeyError as e:
+                        cost_price = sku_price['skuVal']['skuAmount']['value']
+                sku['costPrice'] = cost_price
                 sku['createTime'] = None
                 sku['goodsId'] = product_id
                 sku['id'] = None
