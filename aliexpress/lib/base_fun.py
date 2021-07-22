@@ -54,8 +54,12 @@ def request_get(url, headers=None, proxy=None):
     # headers = kwargs.get('headers', None)
     # proxy = kwargs.get('proxy', None)
     try:
-        with closing(requests.get(url=url, headers=headers, proxies=proxy)) as response:
-            return response.text
+        if proxy:
+            with closing(requests.get(url=url, headers=headers, proxies=proxy)) as response:
+                return response.text
+        else:
+            with closing(requests.get(url=url, headers=headers)) as response:
+                return response.text
     except requests.exceptions.ProxyError as e:
         with closing(requests.get(url=url, headers=headers)) as response:
             return response.text
@@ -87,3 +91,19 @@ def headers(path):
         'cookie': settings.AE_COOKIE
     }
     return headers
+
+
+def request_form_post(url, data, headers=None, proxy=None):
+    try:
+        if proxy:
+            with closing(requests.post(url=url, data=data, headers=headers, proxies=proxy)) as response:
+                return response.text
+        else:
+            with closing(requests.post(url=url, data=data, headers=headers)) as response:
+                return response.text
+    except requests.exceptions.ProxyError as e:
+        with closing(requests.post(url=url, data=data, headers=headers)) as response:
+            return response.text
+    except Exception as e:
+        logger.error(f'请求失败====={e}')
+        return 404, ''
