@@ -31,84 +31,93 @@ class ProductsSpider(object):
             ali_id = ali_id[0]
             ali_link = 'https://www.aliexpress.com/item/' + str(ali_id) + '.html'
             path = '/item/' + str(ali_id) + '.html'
-            try:
-                response_text = request_get(ali_link, headers=headers(path), proxy=proxy())
-                _data = re.findall(r'data:(.*),.*csrfToken:', response_text, re.S)[0]
-                data = json.loads(_data)
-                if data:
-                    item = dict()
-                    item['category'] = self.category(data)
-                    item['commentNumber'] = self.review(data)
-                    item['createTime'] = None
-                    item['deleteSkuIds'] = []
-                    item['description'] = ''
-                    item['detailUrl'] = self.detail_url(data)
-                    item['detailsImgs'], item['document'] = self.parse_desc(item['detailUrl'])
-                    item['goodsCreateTime'] = ''
-                    item['goodsExtDetailId'] = 0
-                    item['goodsImages'] = self.images(data)
-                    item['goodsVideos'] = self.video(data)
-                    item['id'] = 0
-                    item['ip'] = ''
-                    item['isFix'] = ''
-                    item['isShow'] = ''
-                    item['itemNumber'] = ''
-                    item['key'] = ''
-                    item['mainImage'] = item['goodsImages'][0]
-                    item['maxMarketPrice'] = self.max_market_price(data)
-                    item['maxPrice'] = self.max_price(data)
-                    item['minMarketPrice'] = self.min_market_price(data)
-                    item['minPrice'] = self.min_price(data)
-                    item['name'] = self.product_title(data)
-                    item['orginalName'] = self.product_title(data)
-                    item['newAddSkuIds'] = [0]
-                    item['originalDescription'] = ''
-                    item['originalSizeTables'] = [{"rowName": [None], "value": "string"}]
-                    item['originalStoreName'] = ''
-                    item['orignalMaxMarketPrice'] = 0
-                    item['orignalMaxPrice'] = 0
-                    item['orignalMinPrice'] = 0
-                    item['packageSize'] = {"height": "string", "length": "string", "width": "string"}
-                    item['productId'] = ali_id
-                    item['productNoFound'] = False
-                    item['productUrl'] = ali_link
-                    item['properties'] = self.prop_name_value(data)
-                    item['saleStock'] = 0
-                    item['score'] = self.star(data)  # 评分
-                    item['shopId'] = ''
-                    item['shopQualification'] = ''
-                    item['showMarketPrice'] = 0
-                    item['showPrice'] = 0
-                    item['sizeImage'] = 0
-                    item['sizeTables'] = [{"rowName": [None], "value": "string"}]
-                    item['skuList'], item['skuIds'] = self.sku_price_list(data, ali_id)
-                    item['skuPrice'] = 0
-                    item['specs'] = self.specification(data)
-                    item['storeName'] = self.store_name(data)
-                    item['storeUrl'] = self.store_url(data)
-                    item['type'] = 0
-                    item['updatePrice'] = True
-                    item['updateSkuPrice'] = True
-                    item['url'] = None
-                    item['weight'] = None
-                    item['years'] = self.opened_year(data)
-                    item['shippingFrom'] = self.shipping_from(data)
-                    item['keywords'] = self.keywords(data)
-                    item['ownerMemberId'] = self.seller_admin_seq(data)
-                    self.goods_data['code'] = True
-                    self.goods_data['item'] = item
-                    logger.info(f'成功： {self.url}')
-                    # 评论
-                    ae_reviews_id = {
-                        'product_id': ali_id,
-                        'owner_member_id': item['ownerMemberId']
-                    }
-                    self.redis_conn.lpush('ae_reviews_id', json.dumps(ae_reviews_id))
-                else:
-                    logger.error(f'失败url:   self.url')
-            except Exception as e:
+            # try:
+            response_text = request_get(ali_link, headers=headers(path))
+            _data = re.findall(r'data:(.*),.*csrfToken:', response_text, re.S)[0]
+            data = json.loads(_data)
+            if data:
+                item = dict()
+                item['category'] = self.category(data)
+                item['commentNumber'] = self.review(data)
+                item['createTime'] = None
+                item['deleteSkuIds'] = []
+                item['description'] = ''
+                item['detailUrl'] = self.detail_url(data)
+                item['detailsImgs'], item['document'] = self.parse_desc(item['detailUrl'])
+                item['goodsCreateTime'] = ''
+                item['goodsExtDetailId'] = 0
+                item['goodsImages'] = self.images(data)
+                item['goodsVideos'] = self.video(data)
+                item['id'] = 0
+                item['ip'] = ''
+                item['isFix'] = ''
+                item['isShow'] = ''
+                item['itemNumber'] = ''
+                item['key'] = ''
+                item['mainImage'] = item['goodsImages'][0]
+                item['maxMarketPrice'] = self.max_market_price(data)
+                item['maxPrice'] = self.max_price(data)
+                item['minMarketPrice'] = self.min_market_price(data)
+                item['minPrice'] = self.min_price(data)
+                item['name'] = self.product_title(data)
+                item['orginalName'] = self.product_title(data)
+                item['newAddSkuIds'] = [0]
+                item['originalDescription'] = ''
+                item['originalSizeTables'] = [{"rowName": [None], "value": "string"}]
+                item['originalStoreName'] = ''
+                item['orignalMaxMarketPrice'] = 0
+                item['orignalMaxPrice'] = 0
+                item['orignalMinPrice'] = 0
+                item['packageSize'] = {"height": "string", "length": "string", "width": "string"}
+                item['productId'] = ali_id
+                item['productNoFound'] = False
+                item['productUrl'] = ali_link
+                item['properties'] = self.prop_name_value(data)
+                item['saleStock'] = 0
+                item['score'] = self.star(data)  # 评分
+                item['shopId'] = ''
+                item['shopQualification'] = ''
+                item['showMarketPrice'] = 0
+                item['showPrice'] = 0
+                item['sizeImage'] = 0
+                item['sizeTables'] = [{"rowName": [None], "value": "string"}]
+                item['skuList'], item['skuIds'] = self.sku_price_list(data, ali_id)
+                item['skuPrice'] = 0
+                item['specs'] = self.specification(data)
+                item['storeName'] = self.store_name(data)
+                item['storeUrl'] = self.store_url(data)
+                item['type'] = 0
+                item['updatePrice'] = True
+                item['updateSkuPrice'] = True
+                item['url'] = None
+                item['weight'] = None
+                item['years'] = self.opened_year(data)
+                item['shippingFrom'] = self.shipping_from(data)
+                item['keywords'] = self.keywords(data)
+                item['ownerMemberId'] = self.seller_admin_seq(data)
+                item['isActivity'] = self.is_activity(data)
+                self.goods_data['code'] = True
+                self.goods_data['item'] = item
+                logger.info(f'成功： {self.url}')
+                # 评论
+                ae_reviews_id = {
+                    'product_id': ali_id,
+                    'owner_member_id': item['ownerMemberId']
+                }
+                self.redis_conn.lpush('ae_reviews_id', json.dumps(ae_reviews_id))
+            else:
                 logger.error(f'失败url:   self.url')
+        #     except Exception as e:
+        #         logger.error(f'失败url:   self.url')
         return self.goods_data
+
+    @staticmethod
+    def is_activity(data):
+        try:
+            _is_show_banner = data['middleBannerModule']['showUniformBanner']
+        except Exception as e:
+            _is_show_banner = False
+        return _is_show_banner
 
     @staticmethod
     def seller_admin_seq(data):
@@ -131,18 +140,22 @@ class ProductsSpider(object):
         img_desc = re.findall(r'src="(.*?)"', text3)
         if img_desc:
             tmp_img_desc = [i for i in img_desc if 'png' not in i]
-            img_desc = []
-            for i in tmp_img_desc:
-                if '?' in i:
-                    image = i.split('?')[0]
-                    img_desc.append(image)
-                else:
-                    img_desc = tmp_img_desc
+            _img_desc = []
+            for img in tmp_img_desc:
+                if '?' in img:
+                    img = img.split('?')[0]
+                if img.startswith('//'):
+                    img = 'https:' + img
+                elif not img.startswith('https:') and not img.startswith('//'):
+                    img = 'https://' + img
+                _img_desc.append(img)
+
             # # 详情描述
             # table = response.xpath('//table//text()').extract()
             # table = [re.sub(r'[\r\t\n]+', '', i) for i in table]
             # table = ';'.join([i for i in table if i and i != ' '])
             # goods_data['item']['description'] = table
+            return _img_desc, response_text
         return img_desc, response_text
 
     @staticmethod
@@ -187,11 +200,15 @@ class ProductsSpider(object):
         image = data['imageModule']['imagePathList']
         if image:
             image_list = []
-            for i in image:
+            for img in image:
+                if img.startswith('//'):
+                    img = 'https:' + img
+                elif not img.startswith('https:') and not img.startswith('//'):
+                    img = 'https://' + img
                 pattern = re.compile(r'.*(\.jpg|\.jpeg|\.png)')
-                img_format = pattern.match(i)
+                img_format = pattern.match(img)
                 if img_format:
-                    _image = i + "_Q90" + img_format.group(1) + "_.webp"
+                    _image = img + "_Q90" + img_format.group(1) + "_.webp"
                     image_list.append(_image)
             image = image_list
         return image
@@ -332,7 +349,6 @@ class ProductsSpider(object):
                     sku['orginalMarketPrice'] = sku['marketPrice']
                 sku['name'] = None
                 sku['num'] = None
-                sku['orginalMarketPrice'] = None
                 sku['orginalPrice'] = None
                 sku['originalSkuId'] = None
                 sku['price'] = sku['costPrice']
