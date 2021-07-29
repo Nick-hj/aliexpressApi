@@ -133,37 +133,42 @@ class ProductsSpider(object):
         详情
         '''
         path = re.search(r'\.com(.*)', desc_url).group(1)
-        response_text = request_get(desc_url)
-        # 详情图片
-        text2 = re.sub('<table.*?table>', '', response_text, re.S)
-        text3 = re.sub(r'<a.*?</a>', '', text2, re.S)
-        img_desc = re.findall(r'src="(.*?)"', text3)
-        if img_desc:
-            tmp_img_desc = [i for i in img_desc if 'png' not in i]
-            _img_desc = []
-            for img in tmp_img_desc:
-                if '?' in img:
-                    img = img.split('?')[0]
-                if img.startswith('//'):
-                    img = 'https:' + img
-                elif not img.startswith('https:') and not img.startswith('//'):
-                    img = 'https://' + img
-                _img_desc.append(img)
-
-            # # 详情描述
-            # table = response.xpath('//table//text()').extract()
-            # table = [re.sub(r'[\r\t\n]+', '', i) for i in table]
-            # table = ';'.join([i for i in table if i and i != ' '])
-            # goods_data['item']['description'] = table
-            return _img_desc, response_text
-        return img_desc, response_text
+        if desc_url:
+            response_text = request_get(desc_url)
+            # 详情图片
+            text2 = re.sub('<table.*?table>', '', response_text, re.S)
+            text3 = re.sub(r'<a.*?</a>', '', text2, re.S)
+            img_desc = re.findall(r'src="(.*?)"', text3)
+            if img_desc:
+                tmp_img_desc = [i for i in img_desc if 'png' not in i]
+                _img_desc = []
+                for img in tmp_img_desc:
+                    if '?' in img:
+                        img = img.split('?')[0]
+                    if img.startswith('//'):
+                        img = 'https:' + img
+                    elif not img.startswith('https:') and not img.startswith('//'):
+                        img = 'https://' + img
+                    _img_desc.append(img)
+                img_desc = _img_desc
+                # # 详情描述
+                # table = response.xpath('//table//text()').extract()
+                # table = [re.sub(r'[\r\t\n]+', '', i) for i in table]
+                # table = ';'.join([i for i in table if i and i != ' '])
+                # goods_data['item']['description'] = table
+            return img_desc, response_text
+        else:
+            return None, None
 
     @staticmethod
     def detail_url(data):
         '''
         详情url
         '''
-        return data['descriptionModule']['descriptionUrl']
+        try:
+            return data['descriptionModule']['descriptionUrl']
+        except KeyError as e:
+            return None
 
     @staticmethod
     def category(data):
