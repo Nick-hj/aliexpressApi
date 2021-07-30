@@ -143,13 +143,14 @@ class ProductsSpider(object):
                 tmp_img_desc = [i for i in img_desc if 'png' not in i]
                 _img_desc = []
                 for img in tmp_img_desc:
-                    if '?' in img:
-                        img = img.split('?')[0]
-                    if img.startswith('//'):
-                        img = 'https:' + img
-                    elif not img.startswith('https:') and not img.startswith('//'):
-                        img = 'https://' + img
-                    _img_desc.append(img)
+                    if '.jpg' in img or '.jpeg' in img or '.webp' in img or '.bmp' in img:
+                        if '?' in img:
+                            img = img.split('?')[0]
+                        if img.startswith('//'):
+                            img = 'https:' + img
+                        elif not img.startswith('https:') and not img.startswith('//'):
+                            img = 'https://' + img
+                        _img_desc.append(img)
                 img_desc = _img_desc
                 # # 详情描述
                 # table = response.xpath('//table//text()').extract()
@@ -158,7 +159,7 @@ class ProductsSpider(object):
                 # goods_data['item']['description'] = table
             return img_desc, response_text
         else:
-            return None, None
+            return [], None
 
     @staticmethod
     def detail_url(data):
