@@ -95,14 +95,17 @@ class ProductsSpider(object):
                 item['shippingFrom'] = self.shipping_from(data)
                 item['keywords'] = self.keywords(data)
                 item['ownerMemberId'] = self.seller_admin_seq(data)
+                item['tradeCount'] = self.trade_count(data)
                 item['isActivity'] = self.is_activity(data)
                 self.goods_data['code'] = True
                 self.goods_data['item'] = item
                 logger.info(f'成功： {self.url}')
                 # 评论
                 ae_reviews_id = {
+                    'product_name': item['name'],
                     'product_id': ali_id,
-                    'owner_member_id': item['ownerMemberId']
+                    'owner_member_id': item['ownerMemberId'],
+                    'tag': True
                 }
                 self.redis_conn.lpush('ae_reviews_id', json.dumps(ae_reviews_id))
             else:
